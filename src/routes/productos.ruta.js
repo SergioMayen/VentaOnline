@@ -13,5 +13,7 @@ api.get('/obtenerProductoID/:idProducto',md_autentification.ensureAuth, producto
 api.get('/obtenerProductoNombre/:nombreProducto',md_autentification.ensureAuth, productosController.obtenerProductoNombre);
 api.get('/obtenerProductoPorCategoria/:nombreCat',md_autentification.ensureAuth, productosController.obtenerProductoPorCategoria);
 api.get('/controlStock/:idProducto',md_autentification.ensureAuth, productosController.controlStock);
+api.get('/productosAgotados',md_autentification.ensureAuth, productosController.productosAgotados);
+api.get('/masVendidos',md_autentification.ensureAuth,productosController.masVendidos)
 
 module.exports = api;

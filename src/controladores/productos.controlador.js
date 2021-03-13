@@ -10,12 +10,11 @@ const Categoria = require('../modelos/categoria.modelo')
 function registroProducto(req, res){
     var productosModel = new Productos();
     var params = req.body;
-    if(params.nombre && params.descripcion && params.precio && params.stock && params.cantidadVendida && params.idCategoria){
+    if(params.nombre && params.descripcion && params.precio && params.stock  && params.idCategoria){
         productosModel.nombre = params.nombre,
         productosModel.descripcion = params.descripcion;
         productosModel.precio = params.precio;
         productosModel.stock = params.stock;
-        productosModel.cantidadVendida = params.cantidadVendida;
         productosModel.idCategoria = params.idCategoria;
         Productos.find({$or:[
             {nombre: productosModel.nombre},
@@ -101,13 +100,35 @@ function controlStock(req, res){
     var idProducto = req.params.idProducto;   
     Productos.findById(idProducto, (err, productoEncontrado)=>{
         if(productoEncontrado.stock != 0){
-            return res.status(200).send({mensaje: 'producto disponible', productoEncontrado})
+            return res.status(200).send({mensaje: 'producto disponible'})
 
         }else{
-            return res.status(500).send({mensaje: 'producto agotado', productoEncontrado })
+            return res.status(500).send({mensaje: 'producto agotado' })
         }
     })
 }
+
+function productosAgotados(req, res){
+    if(req.usuario.rol ==='ADMIN'){
+        Productos.find({stock: 0},(err,productoEncontrado)=>{
+        if(err) return res.status(500).send({mensaje: 'error en la solicitud'})
+        if(!productoEncontrado) return res.status(500).send({mensaje: 'productos no encontrados'})
+        return res.status(500).send({mensaje: 'producto agotado', productoEncontrado})
+        })
+    }else{
+        return res.status(500).send({mensaje: 'no posee los permisos necesarios'})
+    }
+}
+
+function masVendidos(req,res){
+    Productos.aggregate([
+        {$project:{_id: 1, nombre: 1, precio: 1,cantidadVendida: 1}},
+        {$sort: {cantidadVendida: -1}}
+    ]) .exec((err, productoEncontrado)=>{
+        return res.status(200).send({productoEncontrado})
+    })
+}
+    
 
 module.exports = {
     registroProducto,
@@ -116,5 +137,7 @@ module.exports = {
     obtenerProductoID,
     obtenerProductoNombre,
     obtenerProductoPorCategoria,
-    controlStock
+    controlStock,
+    productosAgotados,
+    masVendidos
 }

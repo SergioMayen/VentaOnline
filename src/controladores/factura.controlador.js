@@ -12,15 +12,26 @@ function crearFactura(req, res){
  var facturaModel = new Factura();
  var idUsuario = req.params.idUsuario;
     Carrito.findOne({idUsuario: idUsuario}, (err, carritoEncontrado)=>{
-        if(err) return res.status(500).send({mensaje: 'error en la peticion'});
-        if(!carritoEncontrado) return res.status(500).send({mensaje: 'producto no encontrado'})
+        if(err) return res.status(500).send({mensaje: 'error en la peticion0'});
+        if(!carritoEncontrado) return res.status(500).send({mensaje: 'carrito no encontrado'})
             facturaModel.idUsuario = carritoEncontrado.idUsuario;
             facturaModel.productos = carritoEncontrado.productos;
             facturaModel.total = carritoEncontrado.total;
-            //eliminar carrito
-        Carrito.findOneAndDelete( {idUsuario: idUsuario}, (err, carritoEliminado)=>{
-                if(err) res.status(500).send({mensaje: 'error en la petion al eliminar el carrito'})
-                if(!carritoEliminado) res.status(500).send({mensaje: 'error al econtrar el carrito'})
+            for(let i = 0; i < facturaModel.productos.length; i++) {
+             var propiedad = facturaModel.productos[i].idProducto;
+             var cant = facturaModel.productos[i].stock;
+             Producto.findByIdAndUpdate(propiedad, {$inc: {cantidadVendida: +1}},{new: true, useFindAndModify: false},(err, productoEncontrado)=>{
+                 if(err) return res.status(500).send({mensaje: 'error en la peticion1'})
+                 if(!productoEncontrado)return res.status(500).send({mensaje: 'no se ha encontrado el producto'});
+                    /*Producto.findByIdAndUpdate(propiedad,{stock: productoEncontrado.stock-cant},{new: true, useFindAndModify: false},(err, productoEncontrado2)=>{
+                    if(err) return res.status(500).send({mensaje: 'error en la peticion2'})
+                    if(!productoEncontrado2) return res.status(500).send({mensaje: 'no se ha encontrado el producto'});
+                    })*/
+             })
+            }
+            Carrito.findOneAndDelete( {idUsuario: idUsuario}, (err, carritoEliminado)=>{
+                if(err) return res.status(500).send({mensaje: 'error en la petion al eliminar el carrito'})
+                if(!carritoEliminado) return res.status(500).send({mensaje: 'error al econtrar el carrito'})
             })                    
             carritoControlador.crearCarrito(idUsuario);
             facturaModel.save((err, facturaGuardada)=>{
@@ -30,8 +41,7 @@ function crearFactura(req, res){
                  }else{
                      return res.status(200).send({facturaGuardada})
                  }
-             })
-            
+             })     
     })
 }
 
@@ -58,15 +68,6 @@ function obtenerFacturaId(req, res){
     }else{
         return res.status(500).send({mensaje: 'no tiene los permisos necesarios'})
     }
-}
-
-function productosAgotados(){
-    if(req.usuario.rol ==='ADMIN'){
-    Factura.find()
-
-}else{
-    return res.status(500).send({mensaje: 'no tiene los permisos necesarios'})
-}
 }
 
 function facturaDetallada(req, res){
